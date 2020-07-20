@@ -2,13 +2,24 @@
 
 Will post a passage randomly from Jakob Lorber Books and links to related jakob-lorber.cc resource.
 
-# Installation
+# Add Bot to Discord Network
+
+1. Create bot inside your Discord Applications area (https://discord.com/developers/applications/)
+2. Replace client ID invite link to invite bot into server (https://discord.com/oauth2/authorize?client_id=YOUR_CLIENT_ID_HERE&scope=bot)
+
+# Server Installation
 
 1. Upload files to base directory and also run the following commands
 2. run `npm install`
 3. run `npm install forever -g`
 
-# Running
+# Running Bot
+
+## setup configuration
+
+Edit config.json and replace token with generated bot access token
+
+See: https://discord.com/developers/applications/ to generate token.
 
 ## start bot server
 
@@ -47,12 +58,10 @@ Three Days in the Temple
 The Great Gospel of John
 ```
 
-# config.json
 
-See: https://discord.com/developers/applications/ to generate token.
 
 Update `token` with bot access token.
 
 # More details
 
-This bot can only serve one Discord Network at a time. 
+This bot can only serve one Discord Network at a time.

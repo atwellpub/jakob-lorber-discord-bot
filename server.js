@@ -1,6 +1,3 @@
-//Invite Link:
-//https://discord.com/oauth2/authorize?client_id=734138894706147389&scope=bot
-
 
 /* Load Discord Client & Configurations*/
 const Discord = require('discord.js');

@@ -33,15 +33,13 @@ Inside your project directory run `forever stop server.js`
 
 ## commands
 
-`!start`  | starts server inside channel.
-
-`!start INT` | starts server inside channel with interval param set.
-
-`!stop` | stops server everywhere
-
-`!restart` | stops and then restarts server in current channel
-
-`!set interval INT` | overwrites default posting interval in secods
+| command | Description  |
+|---|---|
+|`!start`  | starts server inside channel.|
+|`!start INT` | starts server inside channel with interval param set.|
+|`!stop` | stops server everywhere|
+|`!restart` | stops and then restarts server in current channel|
+|`!set interval INT` | overwrites default posting interval in secods|
 
 # DataBase Titles
 

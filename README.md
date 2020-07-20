@@ -17,8 +17,11 @@ Will post a passage randomly from Jakob Lorber Books and links to related jakob-
 
 ## setup configuration
 
-Edit config.json and replace token with generated bot access token
+Edit config.json and replace token with generated bot access token.
 
+### Important!!!
+
+You must use your own application + access key.
 See: https://discord.com/developers/applications/ to generate token.
 
 ## start bot server
@@ -28,10 +31,10 @@ Inside your project directory run `forever start server.js`
 ## stop bot server
 Inside your project directory run `forever stop server.js`
 
-# Commands
+## commands
 
-`!start`  | starts server inside this channel.
-`!start INT` | starts server inside this channel with interval param set.
+`!start`  | starts server inside channel.
+`!start INT` | starts server inside channel with interval param set.
 `!stop` | stops server everywhere
 `!restart` | stops and then restarts server in current channel
 `!set interval INT` | overwrites default posting interval in secods
@@ -59,9 +62,6 @@ The Great Gospel of John
 ```
 
 
-
-Update `token` with bot access token.
-
 # More details
 
-This bot can only serve one Discord Network at a time.
+This bot server can only serve one Discord Network + #channel combination at a time.

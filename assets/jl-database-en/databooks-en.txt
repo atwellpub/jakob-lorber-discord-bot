@@ -1,0 +1,17 @@
+HG|The Household of God||2|HG1.0|3
+FL|The Fly||1|FL1|1
+MO|The Moon||1|MO1|1
+SA|Saturn||1|SA1|1
+NS|The Natural Sun|Announcements about our sun and its natural conditions|1|NS1|1
+SS|The Spiritual Sun|- draft -|2|SS1|2
+CJ|The Childhood of Jesus|Biographical Gospel of the Lord|1|CJ0|1
+EXP|Explanation of Scriptures||1|EXP1|1
+LAO|Paul's Letter to Laodicea||1|LAO1|1
+COR|Correspondence with Jesus|Correspondence between Abgarus and Jesus|1|COR1|1
+EA|The Earth|Parable & chapter 1-12|1|EA0|1
+BTT|Beyond the Threshold|Deathbed scenes|1|BTT0|1
+BM|Bishop Martin|Sunsets into Sunrises|1|BM0|1
+RB|From Hell to Heaven|Robert Blum condensed|4|RB1|2
+HPS|The Healing Power of Sunlight||1|HPS1|1
+TDT|Three Days in the Temple||1|TDT1|1
+GGJ|The Great Gospel of John||2|GGJ1|10

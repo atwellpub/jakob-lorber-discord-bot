@@ -5,7 +5,7 @@ Will post a passage randomly from Jakob Lorber Books and links to related jakob-
 # Add Bot to Discord Network
 
 1. Create bot inside your Discord Applications area (https://discord.com/developers/applications/)
-2. Replace client ID invite link to invite bot into server (https://discord.com/oauth2/authorize?client_id=YOUR_CLIENT_ID_HERE&scope=bot)
+2. Replace client ID in invite link and access from browser to invite bot into server (https://discord.com/oauth2/authorize?client_id=YOUR_CLIENT_ID_HERE&scope=bot)
 
 # Server Installation
 
@@ -34,9 +34,13 @@ Inside your project directory run `forever stop server.js`
 ## commands
 
 `!start`  | starts server inside channel.
+
 `!start INT` | starts server inside channel with interval param set.
+
 `!stop` | stops server everywhere
+
 `!restart` | stops and then restarts server in current channel
+
 `!set interval INT` | overwrites default posting interval in secods
 
 # DataBase Titles

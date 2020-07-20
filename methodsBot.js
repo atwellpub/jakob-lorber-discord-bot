@@ -47,19 +47,20 @@ module.exports = function( memory , client) {
 
         },
         getCommands: function () {
-            var m = "```/* Current Commands: */ \r\n"
-                + "`!start` starts server inside this channel  \r\n"
+            var m = "```*** Current Commands: *** \r\n"
+                + "`!start` starts server inside this channel.  \r\n"
+                + "`!start INT` starts server inside this channel with interval param set.  \r\n"
                 + "`!stop` stops server everywhere \r\n"
                 + "`!restart` stops and then restarts server in current channel \r\n"
                 + "`!set interval INT` overwrites default posting interval in secods \r\n"
                 + "\r\n"
-                + "/* Target Server Channel */\r\n"
+                + "*** Target Server Channel ***\r\n"
                 + "#" + memory.channel.serverChannelName + " (" + memory.channel.serverChannelID + ")" + "\r\n"
                 + "\r\n"
-                + "/* Current Status */\r\n"
+                + "*** Current Status ***\r\n"
                 +  memory.channel.serverStatus + " (every "+memory.channel.interval+" seconds)\r\n"
                 + "\r\n"
-                + "/* Database Deails */\r\n"
+                + "*** Database Deails ***\r\n"
                 + memory.bookContent.linesCount + " passages loaded\r\n"
 
             m = m + "```"
@@ -116,8 +117,8 @@ module.exports = function( memory , client) {
         getExpandedPassage() {
             memory.processor.expandedPassage = [];
 
-            var min = memory.processor.targetLine - 40;
-            var max = memory.processor.targetLine + 40;
+            var min = memory.processor.targetLine - 60;
+            var max = memory.processor.targetLine + 60;
 
             for (i= min; i< max ; i++ ) {
                 memory.processor.expandedPassage[i] = [];
@@ -161,6 +162,7 @@ module.exports = function( memory , client) {
                     /* do not push target if headline */
                     if (sample[book][bookNo][chapter][0] != "TARGET") {
                         sample[book][bookNo][chapter].push("TARGET");
+                        targetFound = true;
                     }
 
                     content = content.toUpperCase();
@@ -173,6 +175,7 @@ module.exports = function( memory , client) {
         },
         getChapterFromParsed : function() {
 
+            let targetFound = false;
             memory.processor.targetChapter = {};
 
             /* loop books */
@@ -184,26 +187,31 @@ module.exports = function( memory , client) {
                     /* loop chapters */
                     for ( chapter in memory.processor.chaptersParsed[book][bookNo]) {
 
-                        /* check if first chapter item is target */
-                        if (memory.processor.chaptersParsed[book][bookNo][chapter][0] != "TARGET") {
-                            continue;
-                        }
-
                         /* check if chapter has more than 4 lines to make sure we have a good target */
                         if (memory.processor.chaptersParsed[book][bookNo][chapter].length <5) {
                             continue;
                         }
 
-                        /* remove target flag */
-                        memory.processor.chaptersParsed[book][bookNo][chapter].shift();
-
-                        /* set chapter title */
-                        memory.processor.targetChapter.chapterTitle = memory.processor.chaptersParsed[book][bookNo][chapter].shift();
-
-                        /* Set chapter into processor memory and exit */
+                        /* update memory with current chapter item */
                         memory.processor.targetChapter.book = book;
                         memory.processor.targetChapter.bookNo = bookNo;
                         memory.processor.targetChapter.chapter = chapter;
+                        memory.processor.targetChapter.chapterTitle = "";
+                        memory.processor.targetChapter.content = memory.processor.chaptersParsed[book][bookNo][chapter].join("\r\n\r\n");
+
+                        /* check if first chapter item has a target flag (title based entry) */
+                        if (memory.processor.chaptersParsed[book][bookNo][chapter][0] != "TARGET") {
+                            continue;
+                        }
+
+
+                        /* remove target flag */
+                        memory.processor.chaptersParsed[book][bookNo][chapter].shift();
+
+                        /* update chapter title */
+                        memory.processor.targetChapter.chapterTitle = memory.processor.chaptersParsed[book][bookNo][chapter].shift();
+
+                        /* update chapter content */
                         memory.processor.targetChapter.content = memory.processor.chaptersParsed[book][bookNo][chapter].join("\r\n\r\n");
 
                         return;
@@ -228,7 +236,7 @@ module.exports = function( memory , client) {
         truncateContent : function() {
             let length = 1600;
 
-            if ( typeof memory.processor.targetChapter.content == 'undefined' ) {
+            if ( !memory.processor.targetChapter.content ) {
                 console.log(util.inspect(memory.processor.chaptersParsed, {showHidden: false, depth: null}))
             }
 
@@ -240,6 +248,10 @@ module.exports = function( memory , client) {
 
             if (memory.processor.targetChapter.titleParsed[5]>1) {
                 title = title + " Book " + memory.processor.targetChapter.bookNo;
+            }
+
+            if (memory.processor.targetChapter.chapter>1) {
+                title = title + " Chapter " + memory.processor.targetChapter.chapter;
             }
 
             title = title + "\r\n" + "\r\n"

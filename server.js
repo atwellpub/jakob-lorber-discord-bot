@@ -69,6 +69,15 @@ client.on('message', message => {
             client.channels.cache.get(message.channel.id).send(param);
             break;
         case "start":
+            if (param) {
+                if (parseInt(param) < 1) {
+                    client.channels.cache.get(message.channel.id).send("```invalid interval set. server not started.```");
+                    return
+                }
+                memory.channel.interval = param;
+                client.channels.cache.get(message.channel.id).send("```server interval set to "+param + " seconds```");
+            }
+
             server.start()
             break;
         case "restart":
@@ -88,7 +97,7 @@ client.on('message', message => {
                     }
 
                     memory.channel.interval = param2;
-                    client.channels.cache.get(message.channel.id).send("```new interval set to "+param2 + " seconds. please restart starver```");
+                    client.channels.cache.get(message.channel.id).send("```new interval set to "+param2 + " seconds. please restart starver.```");
 
                     break;
                 default:

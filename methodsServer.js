@@ -21,6 +21,7 @@ module.exports = function (memory , client) {
 
             /* annouce server is starting */
             let annouce = "```starting server. passages will be posted every " + memory.channel.interval + " seconds```"
+            console.log(annouce)
             client.channels.cache.get(memory.channel.serverChannelID).send(annouce);
 
             this.interval = setInterval(function () {

@@ -264,7 +264,15 @@ module.exports = function( memory , client) {
         },
         appendURLToContent : function() {
 
-            let url = "https://www.jakob-lorber.cc/index.php?l=en&s="+encodeURI(memory.processor.targetChapter.book + " " + memory.processor.targetChapter.bookNo + "." + memory.processor.targetChapter.chapter)
+            let s = memory.processor.targetChapter.book + " ";
+
+            if (memory.processor.targetChapter.bookNo>0) {
+                s = s + memory.processor.targetChapter.bookNo + "." + memory.processor.targetChapter.chapter
+            } else {
+                s = s + memory.processor.targetChapter.chapter
+            }
+
+            let url = "https://www.jakob-lorber.cc/index.php?l=en&s="+encodeURI(s)
 
             memory.processor.targetChapter.url = url;
 

@@ -94,7 +94,7 @@ client.on('message', message => {
                     }
 
                     memory.channel.interval = param2;
-                    client.channels.cache.get(message.channel.id).send("```new interval set to "+param2 + " seconds. please restart starver.```");
+                    client.channels.cache.get(message.channel.id).send("```new interval set to "+param2 + " seconds. please restart server.```");
 
                     break;
                 default:

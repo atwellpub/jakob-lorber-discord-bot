@@ -1,283 +1,332 @@
 /* load requirements */
-const config = require('./config.json');
-const fs = require("fs");
+const config = require('../config.json');
+const fs = require("fs").promises; // Using the fs Promises API for async/await
 const path = require("path");
 const util = require("util");
-/**
- * Database Methods
- *
- */
-module.exports = function( memory , client) {
-    return {
-        init: function ( callback) {
 
-            /* Load book titles */
-            fs.readFile(path.join(__dirname, "assets/jl-database-en", "databooks-en.txt"), 'utf8', function (err, data) {
-                if (err) {
-                    console.log(err);
-                    process.exit(1);
+class contentParser {
+    constructor() {
+        this.memory = {
+            bookTitles: {
+                rawData : "",
+                titles : []
+            },
+            bookContent: {
+                books: {}
+            },
+            passage: {}
+        };
+    }
+
+    async loadDatabase() {
+        try {
+            const bookData = await fs.readFile(path.join(__dirname, "./../assets/jl-database-en", "databooks-en.txt"), 'utf8');
+            this.memory.bookTitles.rawData = bookData;
+            this.memory.bookTitles.titles = [];
+            let titles = this.memory.bookTitles.rawData.split(/\r\n|\r|\n/);
+
+            titles.forEach(title => {
+                const parts = title.split('|');
+
+                if (!parts[0]) {
+                    return;
                 }
 
-                memory.bookTitles = {};
-                memory.bookTitles.rawData = data;
-                memory.bookTitles.titles = memory.bookTitles.rawData.split(/\r\n|\r|\n/);;
-
-                console.log('databooks-en.txt loaded.')
-
-                /* Load passages */
-                fs.readFile(path.join(__dirname, "assets/jl-database-en", "database-en.txt"), 'utf8', function (err, data) {
-                    if (err) {
-                        console.log(err);
-                        process.exit(1);
-                    }
-
-                    memory.bookContent = []
-                    memory.bookContent.rawData = data;
-
-                    memory.bookContent.lines = memory.bookContent.rawData.split(/\r\n|\r|\n/);
-                    memory.bookContent.linesCount = memory.bookContent.lines.length;
-
-                    console.log('database-en.txt loaded.')
-                    console.log(memory.bookContent.linesCount + " lines loaded");
-
-
-                    callback()
-                });
-            });
-
-        },
-        getCommands: function () {
-            var m = "```*** Current Commands: *** \r\n"
-                + "`!start` starts server inside this channel.  \r\n"
-                + "`!start INT` starts server inside this channel with interval param set.  \r\n"
-                + "`!stop` stops server everywhere \r\n"
-                + "`!restart` stops and then restarts server in current channel \r\n"
-                + "`!set interval INT` overwrites default posting interval in secods \r\n"
-                + "\r\n"
-                + "*** Target Server Channel ***\r\n"
-                + "#" + memory.channel.serverChannelName + " (" + memory.channel.serverChannelID + ")" + "\r\n"
-                + "\r\n"
-                + "*** Current Status ***\r\n"
-                +  memory.channel.serverStatus + " (every "+memory.channel.interval+" seconds)\r\n"
-                + "\r\n"
-                + "*** Database Deails ***\r\n"
-                + memory.bookContent.linesCount + " passages loaded\r\n"
-
-            m = m + "```"
-
-            client.channels.cache.get(memory.channel.serverChannelID).send(m);
-        },
-        getPassage: function () {
-
-            console.log('Get random line')
-            memory.bot.getRandomLine()
-            console.log(memory.processor.targetLine)
-
-            console.log('Get target passage')
-            memory.bot.getTargetPassage();
-
-            console.log('Expand target passage')
-            memory.bot.getExpandedPassage();
-
-            console.log('Parse expanded passage')
-            memory.bot.parseExpanded();
-            //console.log(util.inspect(memory.processor.chaptersParsed, {showHidden: false, depth: null}))
-
-            console.log('Discover full chapter')
-            memory.bot.getChapterFromParsed();
-            //console.log(util.inspect(memory.processor.targetChapter, {showHidden: false, depth: null}))
-
-            console.log('Get full book name')
-            memory.bot.getFullBookNameFromParsedChapterData();
-            //console.log(util.inspect(memory.processor.targetChapter, {showHidden: false, depth: null}))
-
-            console.log('Truncate passage to <2000 characters')
-            memory.bot.truncateContent();
-
-            console.log('Prepend Chapter Title to content')
-            memory.bot.prependTitleToContent();
-
-            console.log('Append url to content')
-            memory.bot.appendURLToContent();
-
-            console.log("Passage loaded and ready");
-            console.log(memory.processor.targetChapter);
-
-        },
-        getRandomLine: function () {
-            min = Math.ceil(1);
-            max = Math.floor(memory.bookContent.linesCount);
-            memory.processor.targetLine = Math.floor(Math.random() * (max - min + 1)) + min;
-        },
-        getTargetPassage() {
-            memory.processor.targetPassage = [];
-            memory.processor.targetPassage.raw = memory.bookContent.lines[memory.processor.targetLine]
-            memory.processor.targetPassage.parts = memory.processor.targetPassage.raw.split('|')
-        },
-        getExpandedPassage() {
-            memory.processor.expandedPassage = [];
-
-            var min = memory.processor.targetLine - 60;
-            var max = memory.processor.targetLine + 60;
-
-            for (i= min; i< max ; i++ ) {
-                memory.processor.expandedPassage[i] = [];
-                memory.processor.expandedPassage[i].raw = memory.bookContent.lines[i]
-                memory.processor.expandedPassage[i].parts = memory.processor.expandedPassage[i].raw.split('|')
-            }
-        },
-        parseExpanded() {
-            let sample =  {};
-            for ( lineNum in memory.processor.expandedPassage) {
-
-                var book = memory.processor.expandedPassage[lineNum].parts[0];
-                var bookNo = memory.processor.expandedPassage[lineNum].parts[1];
-                var chapter = memory.processor.expandedPassage[lineNum].parts[2];
-                var pgNo = memory.processor.expandedPassage[lineNum].parts[3];
-                var isHeadline = memory.processor.expandedPassage[lineNum].parts[4];
-                var content = memory.processor.expandedPassage[lineNum].parts[5];
-
-
-                /* bookNo can never be 0 */
-                if (bookNo === 0 ) {
-                    bookNo = 1;
+                this.memory.bookTitles.titles[parts[0]] = {
+                    'abr' : parts[0],
+                    'title' : parts[1]
                 }
+            })
 
-                /* create first iterations */
-                if (typeof sample[book] == 'undefined' ) {
-                    sample[book] = {}
-                }
+            console.log('databooks-en.txt loaded.')
+            console.log(this.memory.bookTitles)
 
-                if (typeof sample[book][bookNo] == 'undefined' ) {
-                    sample[book][bookNo] = {}
-                }
+            const passageData = await fs.readFile(path.join(__dirname, "./../assets/jl-database-en", "database-en.txt"), 'utf8');
+            this.memory.bookContent.rawData = passageData;
 
-                if (typeof sample[book][bookNo][chapter] == 'undefined' ) {
-                    sample[book][bookNo][chapter] = []
-                }
+            this.parseBooks();
 
-                /* if is headline make all caps */
-                if (isHeadline==1 ){
-
-                    /* do not push target if headline */
-                    if (sample[book][bookNo][chapter][0] != "TARGET") {
-                        sample[book][bookNo][chapter].push("TARGET");
-                        targetFound = true;
-                    }
-
-                    content = content.toUpperCase();
-                }
-
-                sample[book][bookNo][chapter].push(content);
-            }
-
-            memory.processor.chaptersParsed = sample;
-        },
-        getChapterFromParsed : function() {
-
-            let targetFound = false;
-            memory.processor.targetChapter = {};
-
-            /* loop books */
-            for ( book in memory.processor.chaptersParsed) {
-
-                /* loop book numbers */
-                for ( bookNo in memory.processor.chaptersParsed[book]) {
-
-                    /* loop chapters */
-                    for ( chapter in memory.processor.chaptersParsed[book][bookNo]) {
-
-                        /* check if chapter has more than 4 lines to make sure we have a good target */
-                        if (memory.processor.chaptersParsed[book][bookNo][chapter].length <5) {
-                            continue;
-                        }
-
-                        /* update memory with current chapter item */
-                        memory.processor.targetChapter.book = book;
-                        memory.processor.targetChapter.bookNo = bookNo;
-                        memory.processor.targetChapter.chapter = chapter;
-                        memory.processor.targetChapter.chapterTitle = "";
-                        memory.processor.targetChapter.content = memory.processor.chaptersParsed[book][bookNo][chapter].join("\r\n\r\n");
-
-                        /* check if first chapter item has a target flag (title based entry) */
-                        if (memory.processor.chaptersParsed[book][bookNo][chapter][0] != "TARGET") {
-                            continue;
-                        }
-
-
-                        /* remove target flag */
-                        memory.processor.chaptersParsed[book][bookNo][chapter].shift();
-
-                        /* update chapter title */
-                        memory.processor.targetChapter.chapterTitle = memory.processor.chaptersParsed[book][bookNo][chapter].shift();
-
-                        /* update chapter content */
-                        memory.processor.targetChapter.content = memory.processor.chaptersParsed[book][bookNo][chapter].join("\r\n\r\n");
-
-                        return;
-                    }
-                }
-            }
-        },
-        getFullBookNameFromParsedChapterData : function() {
-            for ( index in memory.bookTitles.titles) {
-                var parsed = memory.bookTitles.titles[index].split('|')
-
-                if (parsed[0] != memory.processor.targetChapter.book) {
-                    continue;
-                }
-
-                memory.processor.targetChapter.titleParsed = parsed;
-                memory.processor.targetChapter.bookTitleFull = parsed[1]
-
-                return;
-            }
-        },
-        truncateContent : function() {
-            let length = 1600;
-
-            if ( !memory.processor.targetChapter.content ) {
-                console.log(util.inspect(memory.processor.chaptersParsed, {showHidden: false, depth: null}))
-            }
-
-            memory.processor.targetChapter.content = memory.processor.targetChapter.content.substring(0, length) + "...";
-        },
-        prependTitleToContent : function() {
-            var title = memory.processor.targetChapter.chapterTitle + "\r\n"
-                        + memory.processor.targetChapter.bookTitleFull;
-
-            if (memory.processor.targetChapter.titleParsed[5]>1) {
-                title = title + " Book " + memory.processor.targetChapter.bookNo;
-            }
-
-            if (memory.processor.targetChapter.chapter>1) {
-                title = title + " Chapter " + memory.processor.targetChapter.chapter;
-            }
-
-            title = title + "\r\n" + "\r\n"
-
-            memory.processor.targetChapter.content = title + memory.processor.targetChapter.content;
-
-            /* set content in pre tags */
-            memory.processor.targetChapter.content = "```" + memory.processor.targetChapter.content + "```"
-
-        },
-        appendURLToContent : function() {
-
-            let s = memory.processor.targetChapter.book + " ";
-
-            if (memory.processor.targetChapter.bookNo>0) {
-                s = s + memory.processor.targetChapter.bookNo + "." + memory.processor.targetChapter.chapter
-            } else {
-                s = s + memory.processor.targetChapter.chapter
-            }
-
-            let url = "https://www.jakob-lorber.cc/index.php?l=en&s="+encodeURI(s)
-
-            memory.processor.targetChapter.url = url;
-
-            memory.processor.targetChapter.content =  memory.processor.targetChapter.content + "\r\n" + url ;
+            console.log('database-en.txt loaded.')
+            console.log(this.memory.bookContent.linesCount + " lines loaded");
+        } catch (err) {
+            console.log(err);
+            process.exit(1);
         }
     }
-};
 
+    parseBooks() {
+        this.memory.bookContent.lines = this.memory.bookContent.rawData.split(/\r\n|\r|\n/);
+        this.memory.bookContent.linesCount = this.memory.bookContent.lines.length;
+
+        this.memory.bookContent.lines.forEach(line => {
+            const parts = line.split('|');
+            if (parts.length >= 6) {
+                const [book, bookNo, chapter, pgNo, isHeadline, content] = parts;
+                if (!this.memory.bookContent.books[book]) {
+                    this.memory.bookContent.books[book] = {};
+                }
+                if (!this.memory.bookContent.books[book][bookNo]) {
+                    this.memory.bookContent.books[book][bookNo] = {};
+                }
+                if (!this.memory.bookContent.books[book][bookNo][chapter]) {
+                    this.memory.bookContent.books[book][bookNo][chapter] = [];
+                }
+                this.memory.bookContent.books[book][bookNo][chapter].push({
+                    pgNo: parseInt(pgNo),
+                    isHeadline: parseInt(isHeadline),
+                    content
+                });
+            }
+        });
+
+    }
+
+    async logToJSON(passages) {
+        try {
+            const filePath = path.join(__dirname, "./../logs/passages.json");
+
+            // Check if the log file exists
+            let existingData = [];
+            try {
+                const existingContent = await fs.readFile(filePath, "utf8");
+                existingData = JSON.parse(existingContent);
+            } catch (err) {
+                // If the log file does not exist, create it with an empty array
+                await fs.writeFile(filePath, "[]", "utf8");
+            }
+
+            // Add the new passage to the existing array
+            existingData.push(passages);
+
+            // Convert the array to JSON with pretty formatting
+            const jsonData = JSON.stringify(existingData, null, 2);
+
+            // Write the updated array back to the log file
+            await fs.writeFile(filePath, jsonData, "utf8");
+            console.log("Passage added and bookContent updated in passages.json.");
+        } catch (err) {
+            console.error("Error saving bookContent to JSON:", err);
+        }
+    }
+
+
+
+
+    async getPassage() {
+        console.log('Get random passage');
+        await this.getRandomPassage();
+
+        console.log('Get extended passage');
+        await this.getExtendedPassage();
+
+        console.log('Build discord full extended passage');
+        await this.buildExtendedPassage();
+
+        console.log('Truncate passage to <2000 characters');
+        await this.truncateContent();
+
+        console.log('Append url to content');
+        await this.appendURLToContent();
+
+        //console.log('Passage loaded and ready');
+        //console.log(this.memory.passage.targetChapter);
+        if (this.memory.passage.extendedCleaned.length <3) {
+            return '';
+        } else {
+            return this.memory.passage;
+        }
+    }
+
+
+
+    async getRandomPassage() {
+        const books = [];
+        for (const book in this.memory.bookContent.books) {
+            const bookNumbers = Object.keys(this.memory.bookContent.books[book]);
+            for (let i = 0; i < bookNumbers.length; i++) {
+                books.push(book);
+            }
+        }
+
+        const randomBook = books[Math.floor(Math.random() * books.length)];
+        console.log('book selected ' + randomBook)
+        const bookNumbers = Object.keys(this.memory.bookContent.books[randomBook]);
+        const randomBookNo = bookNumbers[Math.floor(Math.random() * bookNumbers.length)];
+        const chapters = Object.keys(this.memory.bookContent.books[randomBook][randomBookNo]);
+        const randomChapter = chapters[Math.floor(Math.random() * chapters.length)];
+
+        const passages = this.memory.bookContent.books[randomBook][randomBookNo][randomChapter];
+        const randomIndex = Math.floor(Math.random() * passages.length);
+        const randomPassage = passages[randomIndex];
+
+        this.memory.passage = {
+            index : randomIndex,
+            book: randomBook,
+            bookTitle: this.memory.bookTitles.titles[randomBook].title,
+            bookNo: randomBookNo,
+            chapter: randomChapter,
+            pgNo: randomPassage.pgNo,
+            isHeadline: randomPassage.isHeadline,
+            content: randomPassage.content,
+            search: '',
+            url: 'https://www.jakob-lorber.cc/',
+            extendedRaw: [],
+            extendedCleaned: [],
+            syndication: {
+                discord : "",
+                twitter : ""
+            }
+        };
+
+        //console.log(this.memory.passage)
+    }
+
+
+
+
+    async getExtendedPassage() {
+        let currentIndex = this.memory.passage.index;
+        let currentBook = this.memory.passage.book;
+        let currentBookNo = this.memory.passage.bookNo;
+        let currentChapter = this.memory.passage.chapter;
+        let passages = this.memory.bookContent.books[currentBook][currentBookNo][currentChapter]
+
+        this.memory.passage.search =  `${currentBook} ${currentBookNo !== '0' ?  currentBookNo +'.' : ''} ${currentChapter !== '0' ? currentChapter : ''}`;
+
+        // Check if the selected passage is a headline
+        if (this.memory.passage.isHeadline === 1) {
+            let start = currentIndex;
+
+            // If the current passage is a subheadline, find the actual headline
+            while (start > 0 && passages[start - 1].isHeadline) {
+                start--;
+            }
+
+            let consecutiveHeadlines = 0;
+
+            // Include passages from start to the next headline (exclusive)
+            for (let i = start; i < passages.length; i++) {
+                if (passages[i].isHeadline) {
+                    consecutiveHeadlines++;
+                    if (consecutiveHeadlines > 4) {
+                        console.log('Passage skipped due to more than four consecutive headlines.');
+                        this.memory.passage = {}
+                        return; // Skip the passage expansion
+                    }
+                } else {
+                    consecutiveHeadlines = 0; // Reset the count
+                }
+
+                this.memory.passage.extendedRaw.push(passages[i]);
+                this.memory.passage.extendedCleaned.push(passages[i].content);
+            }
+        } else {
+            let start = currentIndex - 1;
+
+            // If the current passage is not a headline, find the previous headline
+            while (start > 0 && !passages[start].isHeadline) {
+                start--;
+            }
+
+            // Include passages from start to the current index (exclusive)
+            for (let i = start; i < currentIndex; i++) {
+                this.memory.passage.extendedRaw.push(passages[i]);
+                this.memory.passage.extendedCleaned.push(passages[i].content);
+            }
+        }
+
+        this.logToJSON(this.memory.passage).then();
+    }
+
+
+    async buildExtendedPassage() {
+
+        if (!this.memory.passage || !this.memory.passage.extendedCleaned) {
+            console.log('ExtendedCleaned or Passage is empty')
+          return;
+        }
+
+        // Get the required information from memory.passage
+        const { chapter, book, bookNo } = this.memory.passage;
+
+        // Create the header with the headline, book, volume, and chapter information
+        let discordHeader = `${this.memory.passage.extendedCleaned[0].toUpperCase()}\n${this.memory.bookTitles.titles[book].title}`;
+        let twitterHeader = `${this.memory.passage.extendedCleaned[0].toUpperCase()}\n\n${this.memory.bookTitles.titles[book].title}`;
+
+        if (bookNo > 0) {
+            discordHeader += ` Book ${bookNo} `;
+            twitterHeader += ` Book ${bookNo} `;
+        }
+
+        if (chapter > 0) {
+            discordHeader += ` Chapter ${chapter}`;
+            twitterHeader += ` Chapter ${chapter}`;
+        }
+
+        // Join passages (excluding the first one, as it is already used in the header)
+        const content = this.memory.passage.extendedCleaned.slice(1).join("\n\n");
+
+        // Set the Discord message content by combining the header and the content
+        this.memory.passage.syndication.discord = "```"+ discordHeader + "\n\n" + content +"";
+        this.memory.passage.syndication.twitter = ""+ twitterHeader + "---" + content +"";
+    }
+
+
+    isHeadline(line) {
+        return line && line.split('|')[4] === '1';
+    }
+
+
+    async truncateContent() {
+
+        if (!this.memory.passage) {
+            return;
+        }
+
+        let length = 1800;
+
+        this.memory.passage.syndication.discord = this.memory.passage.syndication.discord.substring(0, length) + "...\n```";
+    }
+
+    prependTitleToContent() {
+
+        if (!this.memory.passage) {
+            return;
+        }
+
+        var title = memory.passage.targetChapter.chapterTitle + "\r\n"
+            + memory.passage.targetChapter.bookTitleFull;
+
+        if (memory.passage.targetChapter.titleParsed[5]>1) {
+            title = title + " Book " + memory.passage.targetChapter.bookNo;
+        }
+
+        if (memory.passage.targetChapter.chapter>1) {
+            title = title + " Chapter " + memory.passage.targetChapter.chapter;
+        }
+
+        title = title + "\r\n" + "\r\n"
+
+        memory.passage.targetChapter.content = title + memory.passage.targetChapter.content;
+
+        /* set content in pre tags */
+        memory.passage.targetChapter.content = "```" + memory.passage.targetChapter.content + "```"
+
+    }
+
+    async appendURLToContent() {
+
+        if (!this.memory.passage) {
+            return;
+        }
+
+        const { book, bookNo, chapter, search } = this.memory.passage;
+
+        this.memory.passage.url = `https://www.jakob-lorber.cc/index.php?l=en&s=${encodeURI(`${search}`)}`;
+
+        this.memory.passage.syndication.discord  =  this.memory.passage.syndication.discord  + "\r\n" +  this.memory.passage.url ;
+    }
+
+}
+
+module.exports = contentParser;

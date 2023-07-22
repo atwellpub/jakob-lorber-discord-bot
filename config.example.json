@@ -1,0 +1,30 @@
+{
+  "version" : "1.2a",
+  "author" : {
+    "name" : "Hudson Atwell",
+    "email" : "atwell.publishing@gmail.com",
+    "twitter" : "@atwellpub"
+  },
+  "discordAPI" : {
+    "applicationId": "xxx",
+    "publicKey": "xxx",
+    "token": "xxx.xxx.xxx"
+  },
+  "twitterAPI" : {
+    "apiKey": "xxx",
+    "apiKeySecret": "xxx",
+    "bearerToken" : "xxx%xxx",
+    "accessToken": "xxx-xxx",
+    "accessTokenSecret": "xxx"
+  },
+  "discord" : {
+    "targetChannel" : "xxxx"
+  },
+  "interval" : {
+    "second" : 1000,
+    "minute" : 60000,
+    "hour" : 360000,
+    "day" : 8640000
+  }
+}
+

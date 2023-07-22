@@ -1,6 +1,6 @@
 # Description
 
-Will post a passage randomly from Jakob Lorber Books and links to related jakob-lorber.cc resource.
+Will post a passage randomly from Jakob Lorber Books and links to related jakob-lorber.cc resource. It currently connects to Discord and to Twitter.
 
 # Add Bot to Discord Network
 
@@ -17,7 +17,7 @@ Will post a passage randomly from Jakob Lorber Books and links to related jakob-
 
 ## setup configuration
 
-Edit config.json and replace token with generated bot access token.
+Rename `config.example.json` to `config.json` and replace the token key with generated Discord bot access token.
 
 ### Important!!!
 

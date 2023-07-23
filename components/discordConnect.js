@@ -33,7 +33,7 @@ discordClient.on('destroy', () => {
 });
 
 // Login the client using your bot token
-discordClient.login(config.discordAPI.token)
+discordClient.login(config.discordAPI.stagingToken)
     .then(() => {
         console.log('Discord client logged in successfully!');
     })

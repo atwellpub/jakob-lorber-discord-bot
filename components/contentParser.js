@@ -148,8 +148,15 @@ class contentParser {
             }
         }
 
-        const randomBook = books[Math.floor(Math.random() * books.length)];
-        console.log('book selected ' + randomBook)
+        const rbi = Math.floor(Math.random() * books.length);
+        const randomBook = books[rbi];
+        console.log('book selected ' + randomBook )
+        if (typeof randomBook == 'undefined') {
+            console.log('book index ' + rbi + ' of ' + books.length )
+            console.log(books)
+            console.log(this.memory.bookContent.books)
+        }
+
         const bookNumbers = Object.keys(this.memory.bookContent.books[randomBook]);
         const randomBookNo = bookNumbers[Math.floor(Math.random() * bookNumbers.length)];
         const chapters = Object.keys(this.memory.bookContent.books[randomBook][randomBookNo]);
@@ -254,8 +261,8 @@ class contentParser {
         let twitterHeader = `${this.memory.passage.extendedCleaned[0].toUpperCase()}\n\n${this.memory.bookTitles.titles[book].title}`;
 
         if (bookNo > 0) {
-            discordHeader += ` Book ${bookNo} `;
-            twitterHeader += ` Book ${bookNo} `;
+            discordHeader += ` Book ${bookNo}`;
+            twitterHeader += ` Book ${bookNo}`;
         }
 
         if (chapter > 0) {
@@ -264,11 +271,16 @@ class contentParser {
         }
 
         // Join passages (excluding the first one, as it is already used in the header)
-        const content = this.memory.passage.extendedCleaned.slice(1).join("\n\n");
+        const discordContent = this.memory.passage.extendedCleaned.slice(1).join("\n\n");
 
-        // Set the Discord message content by combining the header and the content
-        this.memory.passage.syndication.discord = "```"+ discordHeader + "\n\n" + content +"";
-        this.memory.passage.syndication.twitter = ""+ twitterHeader + "---" + content +"";
+        const twitterContent = this.memory.passage.extendedCleaned
+            .slice(1)
+            .map((line, index) => `[${index + 1}] ${line}`)
+            .join("\n\n");
+
+        // Set the message body by combining the header and the content
+        this.memory.passage.syndication.discord = "```"+ discordHeader + "\n\n" + discordContent +"";
+        this.memory.passage.syndication.twitter = ""+ twitterHeader + "---" + twitterContent +"";
     }
 
 
@@ -286,32 +298,6 @@ class contentParser {
         let length = 1800;
 
         this.memory.passage.syndication.discord = this.memory.passage.syndication.discord.substring(0, length) + "...\n```";
-    }
-
-    prependTitleToContent() {
-
-        if (!this.memory.passage) {
-            return;
-        }
-
-        var title = memory.passage.targetChapter.chapterTitle + "\r\n"
-            + memory.passage.targetChapter.bookTitleFull;
-
-        if (memory.passage.targetChapter.titleParsed[5]>1) {
-            title = title + " Book " + memory.passage.targetChapter.bookNo;
-        }
-
-        if (memory.passage.targetChapter.chapter>1) {
-            title = title + " Chapter " + memory.passage.targetChapter.chapter;
-        }
-
-        title = title + "\r\n" + "\r\n"
-
-        memory.passage.targetChapter.content = title + memory.passage.targetChapter.content;
-
-        /* set content in pre tags */
-        memory.passage.targetChapter.content = "```" + memory.passage.targetChapter.content + "```"
-
     }
 
     async appendURLToContent() {

@@ -6,8 +6,8 @@ const twitterClient = require('./components/twitterConnect')
 const tweetStorm = require('./components/tweetStorm')
 const contentParser = require('./components/contentParser.js')
 
-let interval = config.interval.hour * 6;
-interval = config.interval.minute * 5;
+let interval = config.interval.hour * 16;
+//interval = config.interval.minute * 5;
 
 class JakobLorberBot {
 
@@ -41,6 +41,7 @@ class JakobLorberBot {
         const intervalFunction = async (bot) => {
             let passage = await bot.DB.getPassage();
             console.log('Passage loaded')
+            console.log(passage)
 
             // Send the message to the channel
             if (passage) {
@@ -52,7 +53,7 @@ class JakobLorberBot {
         // Execute the interval function immediately
         setTimeout(function(bot) {
             intervalFunction(bot);
-        }, 5000 , this)
+        }, 20000 , this)
 
         // Schedule the interval function to run at regular intervals
         setInterval(intervalFunction, interval, this);

@@ -236,7 +236,17 @@ class contentParser {
             }
 
             // Include passages from start to the current index (exclusive)
-            for (let i = start; i < currentIndex; i++) {
+            for (let i = start; i < (currentIndex + 50) ; i++) {
+                console.log(i)
+                if (typeof passages[i] === 'undefined') {
+                    break;
+                }
+
+                if( i > start && passages[i].isHeadline ){
+                    console.log('here')
+                    break;
+                }
+
                 this.memory.passage.extendedRaw.push(passages[i]);
                 this.memory.passage.extendedCleaned.push(passages[i].content);
             }
@@ -273,10 +283,21 @@ class contentParser {
         // Join passages (excluding the first one, as it is already used in the header)
         const discordContent = this.memory.passage.extendedCleaned.slice(1).join("\n\n");
 
+        let headlineCount = 0;
+
         const twitterContent = this.memory.passage.extendedCleaned
             .slice(1)
-            .map((line, index) => `[${index + 1}] ${line}`)
+            .map((line, index) => {
+                // Check the isHeadline value for the current index in extendedRaw
+                if (!this.memory.passage.extendedRaw[index + 1].isHeadline) {
+                    return `[${index + 1 - headlineCount}] ${line}`;
+                } else {
+                    headlineCount++;
+                    return line;
+                }
+            })
             .join("\n\n");
+
 
         // Set the message body by combining the header and the content
         this.memory.passage.syndication.discord = "```"+ discordHeader + "\n\n" + discordContent +"";

@@ -15,7 +15,7 @@ class tweetStorm {
         this.tweets = this.splitContent();
         console.log(`${this.tweets.length} tweets scheduled to be posted`);
         console.log(this.tweets);
-        return;
+        //return;
 
         const tweetLimit = Math.min(this.tweets.length, 24);
 
@@ -25,6 +25,12 @@ class tweetStorm {
 
             if (tweetText.length > 280) {
                 tweetText = tweetText.slice(0, 280); // Truncate tweet to 280 characters
+            }
+
+            if (i === tweetLimit - 1) {
+                if (tweetText.endsWith("...")) {
+                    tweetText = tweetText.slice(0, -3);
+                }
             }
 
             if (i===0) {
@@ -50,14 +56,23 @@ class tweetStorm {
                     console.log('Reply added.')
                 } catch (error) {
                     console.error(`Error posting tweet ${i + 1}:`, error);
-                    throw new Error('Tweeting process aborted due to an error ');
+                    return;
                 }
             }
         }
 
         // Add the final tweet with a note about the content generation
+        let bookNumber = '';
+        if (this.passage.bookNo > 0) {
+            bookNumber += ` Book ${this.passage.bookNo},`;
+        }
 
-        let finalTweet = '#jakoblorber #' + this.hashTag + "\n\n" + this.passage.url;
+        let chapter = '';
+        if (this.passage.chapter > 0) {
+            chapter += ` Chapter ${this.passage.chapter}`;
+        }
+
+        let finalTweet = 'This thread was sourced from "'+ this.passage.bookTitle +'"' + bookNumber + chapter + '.' + "\n\n" +  'To continue reading, please visit the following URL: '+ "\n" + this.passage.url;
 
         if (finalTweet.length > 280) {
             finalTweet = finalTweet.slice(0, 280); // Truncate final tweet to 280 characters
@@ -71,7 +86,7 @@ class tweetStorm {
             this.previousTweetId = response.data.id; // Assuming that the 'id_str' is a property in the response object
         } catch (error) {
             console.error('Twitter API Error:', error);
-            throw new Error('Tweeting process aborted due to an error');
+            return;
         }
 
     }
